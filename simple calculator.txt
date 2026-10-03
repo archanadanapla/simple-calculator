@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Calculator Web App</title>
+    <style>
+        /* General Centering & Page Reset */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f1f5f9;
+        }
+
+        /* Calculator Container */
+        .calculator {
+            width: 320px;
+            background-color: #0f172a;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+        }
+
+        /* Display Screen Style */
+        .calculator-display {
+            width: 100%;
+            height: 65px;
+            background-color: #1e293b;
+            border: none;
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 2rem;
+            text-align: right;
+            padding: 0 1rem;
+            margin-bottom: 1.2rem;
+            outline: none;
+        }
+
+        /* Grid Layout for Buttons */
+        .calculator-keys {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.8rem;
+        }
+
+        /* Base Button Style */
+        .btn {
+            height: 55px;
+            border-radius: 8px;
+            border: none;
+            font-size: 1.25rem;
+            font-weight: 600;
+            background-color: #334155;
+            color: #ffffff;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .btn:hover {
+            background-color: #475569;
+        }
+
+        /* Color Variations */
+        .btn-action {
+            background-color: #ef4444;
+        }
+
+        .btn-action:hover {
+            background-color: #dc2626;
+        }
+
+        .btn-operator {
+            background-color: #3b82f6;
+        }
+
+        .btn-operator:hover {
+            background-color: #2563eb;
+        }
+
+        .btn-equals {
+            grid-column: span 2;
+            background-color: #10b981;
+        }
+
+        .btn-equals:hover {
+            background-color: #059669;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="calculator">
+        <!-- Display Screen -->
+        <input type="text" id="display" class="calculator-display" readonly placeholder="0">
+
+        <!-- Calculator Keypad Grid -->
+        <div class="calculator-keys">
+            <!-- Row 1 -->
+            <button class="btn btn-action" onclick="clearDisplay()">C</button>
+            <button class="btn btn-action" onclick="deleteLast()">DEL</button>
+            <button class="btn btn-operator" onclick="appendOperator('%')">%</button>
+            <button class="btn btn-operator" onclick="appendOperator('/')">÷</button>
+
+            <!-- Row 2 -->
+            <button class="btn" onclick="appendNumber('7')">7</button>
+            <button class="btn" onclick="appendNumber('8')">8</button>
+            <button class="btn" onclick="appendNumber('9')">9</button>
+            <button class="btn btn-operator" onclick="appendOperator('*')">×</button>
+
+            <!-- Row 3 -->
+            <button class="btn" onclick="appendNumber('4')">4</button>
+            <button class="btn" onclick="appendNumber('5')">5</button>
+            <button class="btn" onclick="appendNumber('6')">6</button>
+            <button class="btn btn-operator" onclick="appendOperator('-')">-</button>
+
+            <!-- Row 4 -->
+            <button class="btn" onclick="appendNumber('1')">1</button>
+            <button class="btn" onclick="appendNumber('2')">2</button>
+            <button class="btn" onclick="appendNumber('3')">3</button>
+            <button class="btn btn-operator" onclick="appendOperator('+')">+</button>
+
+            <!-- Row 5 -->
+            <button class="btn" onclick="appendNumber('0')">0</button>
+            <button class="btn" onclick="appendNumber('.')">.</button>
+            <button class="btn btn-equals" onclick="calculateResult()">=</button>
+        </div>
+    </div>
+
+    <script>
+        // Global reference for display input element
+        const display = document.getElementById('display');
+
+        /**
+         * Appends numbers or decimal points to the display input screen
+         */
+        function appendNumber(input) {
+            if (display.value === '0' || display.value === 'Error') {
+                display.value = '';
+            }
+            if (input === '.' && display.value.endsWith('.')) {
+                return;
+            }
+            display.value += input;
+        }
+
+        /**
+         * Appends mathematical operators safely without duplicates
+         */
+        function appendOperator(operator) {
+            if (display.value === '' || display.value === 'Error') {
+                return;
+            }
+            const lastChar = display.value.slice(-1);
+            if (['+', '-', '*', '/', '%'].includes(lastChar)) {
+                display.value = display.value.slice(0, -1) + operator;
+            } else {
+                display.value += operator;
+            }
+        }
+
+        /**
+         * Clears display screen
+         */
+        function clearDisplay() {
+            display.value = '';
+        }
+
+        /**
+         * Deletes the last character entered
+         */
+        function deleteLast() {
+            if (display.value === 'Error') {
+                display.value = '';
+            } else {
+                display.value = display.value.slice(0, -1);
+            }
+        }
+
+        /**
+         * Evaluates expression and handles errors (e.g. division by zero) gracefully
+         */
+        function calculateResult() {
+            try {
+                if (display.value === '') return;
+
+                // Handle explicit division by zero
+                if (display.value.includes('/0')) {
+                    display.value = 'Error';
+                    return;
+                }
+
+                // Safely evaluate math expression
+                const result = Function('"use strict"; return (' + display.value + ')')();
+
+                if (!isFinite(result) || isNaN(result)) {
+                    display.value = 'Error';
+                } else {
+                    display.value = Number(result.toFixed(8)).toString();
+                }
+            } catch (error) {
+                display.value = 'Error';
+            }
+        }
+    </script>
+</body>
+</html>
